@@ -1,5 +1,7 @@
 import re
 
+df = pd.read_csv("data/labeled_data.csv")
+
 def clean_text(text):
     text = text.lower()
     text = re.sub(r"http\S+", "", text)      # remove URLs
