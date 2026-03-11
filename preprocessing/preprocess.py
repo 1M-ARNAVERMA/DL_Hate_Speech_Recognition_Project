@@ -11,6 +11,8 @@ def clean_text(text):
     text = re.sub(r"[^a-zA-Z\s]", "", text)  # remove special characters
     return text
 
+df["clean_text"] = df["tweet"].apply(clean_text)
+
 banned_words = [
     "word1",
     "word2",
@@ -20,4 +22,7 @@ banned_words = [
 def contains_banned_words(text):
     return any(word in text for word in banned_words)
 
-df = df[~df["clean_text"].apply(contains_banned_words)]
+df = df[~df["clean_text"].apply(contains_banned_words)]  # '~' Iska matlab hai "Not"
+
+print(df.shape)
+print(df.head())
