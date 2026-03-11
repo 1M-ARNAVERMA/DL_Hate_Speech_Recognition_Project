@@ -14,9 +14,15 @@ def clean_text(text):
 df["clean_text"] = df["tweet"].apply(clean_text)
 
 banned_words = [
-    "word1",
-    "word2",
-    "word3"
+    "bitch",
+    "nigga",
+    "pussy",
+    "dick",
+    "fuck",
+    "hoes",
+    "bitches",
+    "sex",
+    "twerking"
 ]
 
 def contains_banned_words(text):
