@@ -36,3 +36,4 @@ print(df.head())
 df["label"] = df["class"].apply(lambda x: 0 if x == 2 else 1)
 
 df.to_csv("data/processed_dataset.csv", index=False)
+print("Converted to processed data")
