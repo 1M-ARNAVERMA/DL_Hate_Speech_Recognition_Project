@@ -63,7 +63,6 @@ training_args = TrainingArguments(
     output_dir="./results",
     num_train_epochs=3,
     per_device_train_batch_size=16,
-    evaluation_strategy="epoch",
     learning_rate=2e-5
 )
 
