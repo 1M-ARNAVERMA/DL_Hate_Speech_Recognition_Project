@@ -9,3 +9,40 @@ train_texts, test_texts, train_labels, test_labels = train_test_split(
     test_size=0.2,
     random_state=42
 )
+
+# This will be used for tokenization
+from transformers import BertTokenizer
+
+tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+
+train_encodings = tokenizer(
+    train_texts.tolist(),
+    truncation=True,
+    padding=True,
+    max_length=128
+)
+
+test_encodings = tokenizer(
+    test_texts.tolist(),
+    truncation=True,
+    padding=True,
+    max_length=128
+)
+
+import torch
+
+class Dataset(torch.utils.data.Dataset):
+    def __init__(self, encodings, labels):
+        self.encodings = encodings
+        self.labels = labels.tolist()
+
+    def __getitem__(self, idx):
+        item = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
+        item["labels"] = torch.tensor(self.labels[idx])
+        return item
+
+    def __len__(self):
+        return len(self.labels)
+
+train_dataset = Dataset(train_encodings, train_labels)
+test_dataset = Dataset(test_encodings, test_labels)
