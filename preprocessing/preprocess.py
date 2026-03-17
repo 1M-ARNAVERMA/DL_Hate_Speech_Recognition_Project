@@ -32,3 +32,7 @@ df = df[~df["clean_text"].apply(contains_banned_words)]  # '~' Iska matlab hai "
 
 print(df.shape)
 print(df.head())
+
+df["label"] = df["class"].apply(lambda x: 0 if x == 2 else 1)
+
+df.to_csv("data/processed_dataset.csv", index=False)
