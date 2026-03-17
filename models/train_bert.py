@@ -66,3 +66,22 @@ training_args = TrainingArguments(
     evaluation_strategy="epoch",
     learning_rate=2e-5
 )
+
+# Now here we will be training our model
+trainer = Trainer(
+    model=model,
+    args=training_args,
+    train_dataset=train_dataset,
+    eval_dataset=test_dataset
+)
+
+trainer.train()
+
+# Evaluation 
+from sklearn.metrics import accuracy_score, f1_score
+
+predictions = trainer.predict(test_dataset)
+preds = predictions.predictions.argmax(axis=1)
+
+print("Accuracy:", accuracy_score(test_labels, preds))
+print("F1 Score:", f1_score(test_labels, preds))
