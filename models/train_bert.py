@@ -46,3 +46,23 @@ class Dataset(torch.utils.data.Dataset):
 
 train_dataset = Dataset(train_encodings, train_labels)
 test_dataset = Dataset(test_encodings, test_labels)
+
+# We are loading the pre-existing BERT model here 
+
+from transformers import BertForSequenceClassification
+
+model = BertForSequenceClassification.from_pretrained(
+    "bert-base-uncased",
+    num_labels=2
+)
+
+# Training Setup 
+from transformers import Trainer, TrainingArguments
+
+training_args = TrainingArguments(
+    output_dir="./results",
+    num_train_epochs=3,
+    per_device_train_batch_size=16,
+    evaluation_strategy="epoch",
+    learning_rate=2e-5
+)
