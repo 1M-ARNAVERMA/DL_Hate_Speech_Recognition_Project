@@ -1,7 +1,17 @@
 import pandas as pd
+df = pd.read_csv("data/processed_dataset.csv")
+
+from sklearn.model_selection import train_test_split
+
+train_texts, test_texts, train_labels, test_labels = train_test_split(
+    df["clean_text"],
+    df["label"],
+    test_size=0.2,
+    random_state=42
+)
+
 import nltk
 nltk.download('wordnet')
-df = pd.read_csv("data/processed_dataset.csv")
 
 from nltk.corpus import wordnet
 import random
@@ -26,7 +36,11 @@ augmented_df = pd.DataFrame({
     "label": train_labels
 })
 
-augmented_full = pd.concat([
-    pd.DataFrame({"clean_text": train_texts, "label": train_labels}),
-    augmented_df
-])
+original_df = pd.DataFrame({
+    "clean_text": train_texts,
+    "label": train_labels
+})
+
+augmented_full = pd.concat([original_df, augmented_df])
+
+augmented_full.to_csv("data/augmented_dataset.csv", index=False)
