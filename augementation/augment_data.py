@@ -10,11 +10,15 @@ train_texts, test_texts, train_labels, test_labels = train_test_split(
     random_state=42
 )
 
-print(type(train_texts))
-print(type(train_texts.iloc[0]))
-print(train_texts.iloc[0])
+train_texts = train_texts.reset_index(drop=True)
+train_labels = train_labels.reset_index(drop=True)
+
+#print(type(train_texts))
+#print(type(train_texts.iloc[0]))
+#print(train_texts.iloc[0])
 #print(train_texts.head())
 #print(train_texts.isnull().sum())
+
 '''
 import nltk
 nltk.download('wordnet')
