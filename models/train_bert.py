@@ -2,6 +2,10 @@ import pandas as pd
 #df = pd.read_csv("data/processed_dataset.csv")
 df = pd.read_csv("data/augmented_dataset.csv")
 
+df = df.dropna(subset=["clean_text"])
+df = df[df["clean_text"].astype(str).str.strip() != ""]
+df["clean_text"] = df["clean_text"].astype(str)
+
 from sklearn.model_selection import train_test_split
 
 train_texts, test_texts, train_labels, test_labels = train_test_split(
@@ -11,20 +15,27 @@ train_texts, test_texts, train_labels, test_labels = train_test_split(
     random_state=42
 )
 
+print(df.head())
+print(df["clean_text"].isnull().sum())
+print(df["clean_text"].apply(type).value_counts())
+print(type(train_texts))
+print(len(train_texts))
+print(train_texts[:5])
+'''
 # This will be used for tokenization
 from transformers import BertTokenizer
 
 tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 
 train_encodings = tokenizer(
-    train_texts.tolist(),
+    train_texts = train_texts.astype(str).tolist(),
     truncation=True,
     padding=True,
     max_length=128
 )
 
 test_encodings = tokenizer(
-    test_texts.tolist(),
+    test_texts = test_texts.astype(str).tolist(),
     truncation=True,
     padding=True,
     max_length=128
@@ -85,3 +96,4 @@ preds = predictions.predictions.argmax(axis=1)
 
 print("Accuracy:", accuracy_score(test_labels, preds))
 print("F1 Score:", f1_score(test_labels, preds))
+'''

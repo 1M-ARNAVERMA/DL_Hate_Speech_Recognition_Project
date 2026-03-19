@@ -26,14 +26,15 @@ def synonym_replacement(sentence):
     words = sentence.split()
     new_words = words.copy()
 
-    # replace only ONE word (better)
     if len(words) > 0:
         i = random.randint(0, len(words)-1)
         synonyms = wordnet.synsets(words[i])
         if synonyms:
             synonym_words = synonyms[0].lemmas()
             if synonym_words:
-                new_words[i] = synonym_words[0].name()
+                new_word = synonym_words[0].name()
+                new_word = new_word.replace("_", " ")   
+                new_words[i] = new_word
 
     return " ".join(new_words)
 
@@ -51,9 +52,15 @@ original_df = pd.DataFrame({
     "label": train_labels
 })
 
+
 # Combine
 augmented_full = pd.concat([original_df, augmented_df]).reset_index(drop=True)
 
+augmented_full["clean_text"] = augmented_full["clean_text"].astype(str)
+
+# Remove empty or very short sentences
+augmented_full = augmented_full[augmented_full["clean_text"].str.strip() != ""]
+augmented_full = augmented_full[augmented_full["clean_text"].str.len() > 3]
 # Save
 augmented_full.to_csv("data/augmented_dataset.csv", index=False)
 
