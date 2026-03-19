@@ -21,21 +21,26 @@ print(df["clean_text"].apply(type).value_counts())
 print(type(train_texts))
 print(len(train_texts))
 print(train_texts[:5])
-'''
+
 # This will be used for tokenization
 from transformers import BertTokenizer
 
 tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 
+# Convert to proper format
+train_texts = train_texts.astype(str).values.tolist()
+test_texts = test_texts.astype(str).values.tolist()
+
+# Tokenization
 train_encodings = tokenizer(
-    train_texts = train_texts.astype(str).tolist(),
+    text=train_texts,
     truncation=True,
     padding=True,
     max_length=128
 )
 
 test_encodings = tokenizer(
-    test_texts = test_texts.astype(str).tolist(),
+    text=test_texts,
     truncation=True,
     padding=True,
     max_length=128
@@ -96,4 +101,3 @@ preds = predictions.predictions.argmax(axis=1)
 
 print("Accuracy:", accuracy_score(test_labels, preds))
 print("F1 Score:", f1_score(test_labels, preds))
-'''
