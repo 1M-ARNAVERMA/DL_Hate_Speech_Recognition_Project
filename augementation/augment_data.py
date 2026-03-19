@@ -1,4 +1,5 @@
 import pandas as pd
+
 df = pd.read_csv("data/processed_dataset.csv")
 
 from sklearn.model_selection import train_test_split
@@ -10,16 +11,11 @@ train_texts, test_texts, train_labels, test_labels = train_test_split(
     random_state=42
 )
 
+# IMPORTANT: reset index
 train_texts = train_texts.reset_index(drop=True)
 train_labels = train_labels.reset_index(drop=True)
 
-#print(type(train_texts))
-#print(type(train_texts.iloc[0]))
-#print(train_texts.iloc[0])
-#print(train_texts.head())
-#print(train_texts.isnull().sum())
-
-'''
+# ---- AUGMENTATION STARTS ----
 import nltk
 nltk.download('wordnet')
 
@@ -30,8 +26,10 @@ def synonym_replacement(sentence):
     words = sentence.split()
     new_words = words.copy()
 
-    for i, word in enumerate(words):
-        synonyms = wordnet.synsets(word)
+    # replace only ONE word (better)
+    if len(words) > 0:
+        i = random.randint(0, len(words)-1)
+        synonyms = wordnet.synsets(words[i])
         if synonyms:
             synonym_words = synonyms[0].lemmas()
             if synonym_words:
@@ -39,8 +37,10 @@ def synonym_replacement(sentence):
 
     return " ".join(new_words)
 
+# Apply augmentation
 augmented_texts = train_texts.apply(synonym_replacement)
 
+# Create datasets
 augmented_df = pd.DataFrame({
     "clean_text": augmented_texts,
     "label": train_labels
@@ -51,7 +51,10 @@ original_df = pd.DataFrame({
     "label": train_labels
 })
 
+# Combine
 augmented_full = pd.concat([original_df, augmented_df]).reset_index(drop=True)
 
+# Save
 augmented_full.to_csv("data/augmented_dataset.csv", index=False)
-'''
+
+print("Augmented dataset created successfully!")
