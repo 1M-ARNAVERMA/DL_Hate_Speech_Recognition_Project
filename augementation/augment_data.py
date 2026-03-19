@@ -51,7 +51,7 @@ original_df = pd.DataFrame({
     "label": train_labels
 })
 
-augmented_full = pd.concat([original_df, augmented_df])
+augmented_full = pd.concat([original_df, augmented_df]).reset_index(drop=True)
 
 augmented_full.to_csv("data/augmented_dataset.csv", index=False)
 '''
