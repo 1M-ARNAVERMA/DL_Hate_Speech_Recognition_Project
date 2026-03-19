@@ -10,6 +10,9 @@ train_texts, test_texts, train_labels, test_labels = train_test_split(
     random_state=42
 )
 
+print(train_texts.head())
+print(train_texts.isnull().sum())
+'''
 import nltk
 nltk.download('wordnet')
 
@@ -44,3 +47,4 @@ original_df = pd.DataFrame({
 augmented_full = pd.concat([original_df, augmented_df])
 
 augmented_full.to_csv("data/augmented_dataset.csv", index=False)
+'''
