@@ -1,6 +1,6 @@
 import pandas as pd
-#df = pd.read_csv("data/processed_dataset.csv")
-df = pd.read_csv("data/augmented_dataset.csv")
+df = pd.read_csv("data/processed_dataset.csv")
+#df = pd.read_csv("data/augmented_dataset.csv")
 
 df = df.dropna(subset=["clean_text"])
 df = df[df["clean_text"].astype(str).str.strip() != ""]
@@ -14,6 +14,34 @@ train_texts, test_texts, train_labels, test_labels = train_test_split(
     test_size=0.2,
     random_state=42
 )
+
+import nltk
+nltk.download('wordnet')
+
+from nltk.corpus import wordnet
+import random
+
+def synonym_replacement(sentence):
+    words = sentence.split()
+    new_words = words.copy()
+
+    if len(words) > 0:
+        i = random.randint(0, len(words)-1)
+        synonyms = wordnet.synsets(words[i])
+        if synonyms:
+            synonym_words = synonyms[0].lemmas()
+            if synonym_words:
+                new_word = synonym_words[0].name().replace("_", " ")
+                new_words[i] = new_word
+
+    return " ".join(new_words)
+
+# Apply ONLY on training data
+augmented_texts = train_texts.apply(synonym_replacement)
+
+# Combine original + augmented training data
+train_texts_aug = pd.concat([train_texts, augmented_texts]).reset_index(drop=True)
+train_labels_aug = pd.concat([train_labels, train_labels]).reset_index(drop=True)
 
 print(df.head())
 print(df["clean_text"].isnull().sum())
