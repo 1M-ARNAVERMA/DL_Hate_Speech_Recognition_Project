@@ -1,11 +1,15 @@
 import pandas as pd
-df = pd.read_csv("data/processed_dataset.csv")
-#df = pd.read_csv("data/augmented_dataset.csv")
+import numpy as np
 
+# Load ORIGINAL dataset (correct)
+df = pd.read_csv("data/processed_dataset.csv")
+
+# Basic cleaning
 df = df.dropna(subset=["clean_text"])
 df = df[df["clean_text"].astype(str).str.strip() != ""]
 df["clean_text"] = df["clean_text"].astype(str)
 
+# Train-test split FIRST (important)
 from sklearn.model_selection import train_test_split
 
 train_texts, test_texts, train_labels, test_labels = train_test_split(
@@ -15,6 +19,15 @@ train_texts, test_texts, train_labels, test_labels = train_test_split(
     random_state=42
 )
 
+# Reset indices
+train_texts = train_texts.reset_index(drop=True)
+train_labels = train_labels.reset_index(drop=True)
+test_texts = test_texts.reset_index(drop=True)
+test_labels = test_labels.reset_index(drop=True)
+
+# -------------------------------
+# DATA AUGMENTATION (TRAIN ONLY)
+# -------------------------------
 import nltk
 nltk.download('wordnet')
 
@@ -36,44 +49,51 @@ def synonym_replacement(sentence):
 
     return " ".join(new_words)
 
-# Apply ONLY on training data
+# Apply augmentation ONLY on training data
 augmented_texts = train_texts.apply(synonym_replacement)
 
-# Combine original + augmented training data
+# Combine original + augmented
 train_texts_aug = pd.concat([train_texts, augmented_texts]).reset_index(drop=True)
 train_labels_aug = pd.concat([train_labels, train_labels]).reset_index(drop=True)
 
-print(df.head())
-print(df["clean_text"].isnull().sum())
-print(df["clean_text"].apply(type).value_counts())
-print(type(train_texts))
-print(len(train_texts))
-print(train_texts[:5])
-
-# This will be used for tokenization
+# -------------------------------
+# TOKENIZATION
+# -------------------------------
 from transformers import BertTokenizer
 
 tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 
-# Convert to proper format
-train_texts = train_texts.astype(str).values.tolist()
-test_texts = test_texts.astype(str).values.tolist()
+# Convert to list format
+train_texts_list = train_texts.astype(str).values.tolist()
+test_texts_list = test_texts.astype(str).values.tolist()
+train_texts_aug_list = train_texts_aug.astype(str).values.tolist()
+train_labels_aug_list = train_labels_aug.tolist()
 
-# Tokenization
+# Tokenize
 train_encodings = tokenizer(
-    text=train_texts,
+    text=train_texts_list,
+    truncation=True,
+    padding=True,
+    max_length=128
+)
+
+train_encodings_aug = tokenizer(
+    text=train_texts_aug_list,
     truncation=True,
     padding=True,
     max_length=128
 )
 
 test_encodings = tokenizer(
-    text=test_texts,
+    text=test_texts_list,
     truncation=True,
     padding=True,
     max_length=128
 )
 
+# -------------------------------
+# DATASET CLASS
+# -------------------------------
 import torch
 
 class Dataset(torch.utils.data.Dataset):
@@ -89,20 +109,15 @@ class Dataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.labels)
 
+# Create datasets
 train_dataset = Dataset(train_encodings, train_labels)
+train_dataset_aug = Dataset(train_encodings_aug, train_labels_aug)
 test_dataset = Dataset(test_encodings, test_labels)
 
-# We are loading the pre-existing BERT model here 
-
-from transformers import BertForSequenceClassification
-
-model = BertForSequenceClassification.from_pretrained(
-    "bert-base-uncased",
-    num_labels=2
-)
-
-# Training Setup 
-from transformers import Trainer, TrainingArguments
+# -------------------------------
+# MODEL + TRAINING SETUP
+# -------------------------------
+from transformers import BertForSequenceClassification, Trainer, TrainingArguments
 
 training_args = TrainingArguments(
     output_dir="./results",
@@ -111,7 +126,14 @@ training_args = TrainingArguments(
     learning_rate=2e-5
 )
 
-# Now here we will be training our model
+# -------------------------------
+# BASELINE MODEL
+# -------------------------------
+model = BertForSequenceClassification.from_pretrained(
+    "bert-base-uncased",
+    num_labels=2
+)
+
 trainer = Trainer(
     model=model,
     args=training_args,
@@ -121,11 +143,48 @@ trainer = Trainer(
 
 trainer.train()
 
-# Evaluation 
+# Evaluate baseline
 from sklearn.metrics import accuracy_score, f1_score
 
 predictions = trainer.predict(test_dataset)
-preds = predictions.predictions.argmax(axis=1)
+preds = np.argmax(predictions.predictions, axis=1)
 
-print("Accuracy:", accuracy_score(test_labels, preds))
-print("F1 Score:", f1_score(test_labels, preds))
+baseline_acc = accuracy_score(test_labels, preds)
+baseline_f1 = f1_score(test_labels, preds)
+
+print("Baseline Accuracy:", baseline_acc)
+print("Baseline F1:", baseline_f1)
+
+# -------------------------------
+# AUGMENTED MODEL
+# -------------------------------
+model_aug = BertForSequenceClassification.from_pretrained(
+    "bert-base-uncased",
+    num_labels=2
+)
+
+trainer_aug = Trainer(
+    model=model_aug,
+    args=training_args,
+    train_dataset=train_dataset_aug,
+    eval_dataset=test_dataset
+)
+
+trainer_aug.train()
+
+# Evaluate augmented
+predictions_aug = trainer_aug.predict(test_dataset)
+preds_aug = np.argmax(predictions_aug.predictions, axis=1)
+
+aug_acc = accuracy_score(test_labels, preds_aug)
+aug_f1 = f1_score(test_labels, preds_aug)
+
+print("Augmented Accuracy:", aug_acc)
+print("Augmented F1:", aug_f1)
+
+# -------------------------------
+# FINAL COMPARISON
+# -------------------------------
+print("\n=== FINAL RESULTS ===")
+print(f"Baseline  -> Accuracy: {baseline_acc:.4f}, F1: {baseline_f1:.4f}")
+print(f"Augmented -> Accuracy: {aug_acc:.4f}, F1: {aug_f1:.4f}")
