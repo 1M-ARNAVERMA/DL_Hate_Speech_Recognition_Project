@@ -188,3 +188,17 @@ print("Augmented F1:", aug_f1)
 print("\n=== FINAL RESULTS ===")
 print(f"Baseline  -> Accuracy: {baseline_acc:.4f}, F1: {baseline_f1:.4f}")
 print(f"Augmented -> Accuracy: {aug_acc:.4f}, F1: {aug_f1:.4f}")
+
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+cm = confusion_matrix(test_labels, preds)
+
+plt.figure()
+sns.heatmap(cm, annot=True, fmt="d")
+plt.title("Confusion Matrix - Baseline")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.savefig("results/confusion_matrix.png")
+plt.show()
